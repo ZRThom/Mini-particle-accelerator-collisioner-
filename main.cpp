@@ -6,7 +6,7 @@ rgb_lcd lcd;
 
 // buzzer
 const int buzzerPin1 = 7;
-const float temperatureThreshold = 13.0;
+const float temperatureThreshold = 12.0;
 const int buzzerFrequency = 1000;
 
 const int potentiometerPin1 = A2;
@@ -20,7 +20,7 @@ const int tempPin1 = A0;
 const int B = 4275;
 const long R0 = 100000;
 
-// pin panel
+// pin panel (6 panel with 3 pin init each)
 const int registerPins[6][3] = {
   {24, 26, 28},
   {34, 36, 38},
@@ -40,6 +40,7 @@ float speed = 0.0;
 int bluePosition = 0;
 int redPosition = ledCount - 1;
 
+// btn state
 bool running = false;
 bool lastButtonState = LOW;
 bool stableButtonState = LOW;
@@ -69,7 +70,9 @@ const unsigned long lcdInterval = 200;
 const unsigned long tempInterval = 500;
 const unsigned long collisionInterval = 80;
 
+// init all
 void setup() {
+  // every led with all 6 register
   for (int i = 0; i < 6; i++) {
     for (int j = 0; j < 3; j++) {
       pinMode(registerPins[i][j], OUTPUT);
@@ -100,6 +103,7 @@ void updateRegister(int reg, byte value) {
   digitalWrite(latch, HIGH);
 }
 
+// reverse rgb led  (for first panel)
 byte reverseBits(byte value) {
   byte result = 0;
   for (int i = 0; i < 8; i++) {
@@ -129,6 +133,7 @@ void showParticles() {
   setRGB(red, 0, blue);
 }
 
+// speed with potentiometer
 void updateParticles() {
   unsigned long now = millis();
 
@@ -136,7 +141,7 @@ void updateParticles() {
 
   speed = min((float)potentiometerValue / potentiometerMax, 1.0f) * maxSpeed;
   if (speed <= 0) {
-    lastMove = now;
+    lastMove = now; // stop led
     return;
   }
 
@@ -224,7 +229,7 @@ void printStatus(const char* message) {
   lcd.setCursor(0, 0);
   lcd.print(message);
 
-  for (int i = strlen(message); i < 16; i++) {
+  for (int i = strlen(message); i < 16; i++) { // string 
     lcd.print(" ");
   }
 }
@@ -279,6 +284,7 @@ void startSystem() {
   redPosition = ledCount - 1;
   lastMove = millis();
 
+  // lcd animation for the start
   lcd.setRGB(0, 0, 0);
   lcd.setRGB(255, 255, 255);
   delay(50);
@@ -357,6 +363,7 @@ void updateCollision() {
   int growSteps = ledCount / 2 - waveSize;
   unsigned long growDuration = growSteps * collisionInterval;
   int step;
+  
   if (elapsed < growDuration) {
     step = elapsed / collisionInterval;
   } else if (elapsed < growDuration + flashDuration) {
